@@ -21,7 +21,7 @@ const { movieDB } = require('../data');
             `${OMDB_API_URL}&type=movie&s=${searchValue}&page=${page}`
         );
 
-        const localMovies = movieDB.searchMovies(searchValue);
+        const localMovies = movieDB.searchMovies(searchValue, page);
 
         if ((!response.data || response.data.Response === 'False') && localMovies.length === 0) {
             return res.status(404).send(methods.failResponse('No movies found for the given search input'));

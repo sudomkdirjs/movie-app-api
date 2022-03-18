@@ -29,8 +29,10 @@ class MovieDB {
         return movie.imdbID;
     }
 
-    searchMovies = function(searchValue = '') {
+    searchMovies = function(searchValue = '', page = 1) {
+        page = Number(page);
         let movies = [];
+
         searchValue = searchValue.trim();
 
         if ( searchValue === '') return [];
@@ -41,7 +43,7 @@ class MovieDB {
                 movies.push(this.MOVIES[i]);
             }
         }
-        return movies;
+        return movies.slice( (page - 1)*10, page*10);
       }
     
 }
