@@ -4,6 +4,8 @@ const axios = require('axios');
 
 const { OMDB_API_URL } = require('../helpers/config');
 
+const { movieDB } = require('../data');
+
 /**
  *
  * @param req
@@ -18,29 +20,35 @@ const { OMDB_API_URL } = require('../helpers/config');
         const response = await axios(
             `${OMDB_API_URL}&type=movie&s=${searchValue}&page=${page}`
         );
-        if (!response.data || response.data.Response === 'False') {
-            res.status(404).send(methods.failResponse('No movies found for the given search input'));
-        } else {
-            res.send(
-                methods.successResponse(
-                    'Success',
-                    getMoviesListPayload(response.data)
-                )
-            );
+
+        const localMovies = movieDB.searchMovies(searchValue);
+
+        if ((!response.data || response.data.Response === 'False') && localMovies.length === 0) {
+            return res.status(404).send(methods.failResponse('No movies found for the given search input'));
         }
+
+        res.send(
+            methods.successResponse(
+                'Success',
+                getMoviesListPayload(response.data, localMovies)
+            )
+        );
     } catch(error) {
         console.log(error);
         res.status(404).send(methods.failResponse('No movies found for the given search input'));
     } 
 }
 
-const getMoviesListPayload = (data) => {
+const getMoviesListPayload = (data = {}, localMovies = []) => {
 
-    data.Search.sort((a, b) => Number(b.Year) - Number(a.Year));
+    let omdbMovies = data.Search || [];
+    let movies = [...localMovies, ...omdbMovies];
+
+    movies.sort((a, b) => Number(b.Year) - Number(a.Year));
 
     return {
-        movies: data.Search,
-        totalResults: Number(data.totalResults)
+        movies,
+        totalResults: (Number(data.totalResults) || 0) + localMovies.length
     }
 }
 
@@ -55,19 +63,22 @@ const getMoviesListPayload = (data) => {
     const { movieID = '' } = req.params;
 
     try {
-        const response = await axios(
+        let response = await axios(
             `${OMDB_API_URL}&type=movie&i=${movieID}`
         );
         if (!response.data || response.data.Response === 'False') {
-            res.status(404).send(methods.failResponse('Movie Not Found'));
-        } else {
-            res.send(
-                methods.successResponse(
-                    'Success',
-                    response.data
-                )
-            );
+            const movie = movieDB.getMovie(movieID);
+            if (!movie) {
+                return res.status(404).send(methods.failResponse('Movie Not Found'));
+            }
+            response = { data: movie };
         }
+        return res.send(
+            methods.successResponse(
+                'Success',
+                response.data
+            )
+        );
     } catch(error) {
         console.log(error);
         res.status(404).send(methods.failResponse('Movie Not Found'));
@@ -81,13 +92,19 @@ const getMoviesListPayload = (data) => {
  * @returns {Promise<void>}
  */
 exports.createMovie = async (req, res) => {
-    res.send(
-        methods.successResponse(
-            'Express JS API Boiler Plate post api working like a charm...',
-            {
-                data: 'here comes you payload...',
-                request: req.body
-            }
-        )
-    );
+
+    try {
+        const movie = { ...req.body, imdbID: methods.uid() };
+        const imdbID = movieDB.addMovie(movie);
+
+        res.send(
+            methods.successResponse(
+                'Success',
+                { imdbID }
+            )
+        );
+    } catch(error) {
+        console.log(error);
+        res.status(400).send(methods.failResponse('Bad Request'));
+    }
 }
