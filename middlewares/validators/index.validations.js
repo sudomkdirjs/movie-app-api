@@ -1,7 +1,7 @@
-const { body } = require("express-validator")
+const { body } = require('express-validator');
 
 /**
  *
  * @type {ValidationChain[]}
  */
-exports.indexValidator = [body("key").exists().withMessage("key is required")]
+exports.indexValidator = [body('Title').exists().withMessage('Title is required')];
