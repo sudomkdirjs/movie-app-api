@@ -14,6 +14,7 @@ function itemExists(haystack, needle) {
 class MovieDB {
     constructor() {
         this.MOVIES = [];
+        this.SIZE = 10;
     }
 
     getMovies = function() {
@@ -33,17 +34,26 @@ class MovieDB {
         page = Number(page);
         let movies = [];
 
-        searchValue = searchValue.trim();
+        searchValue = searchValue.trim().toLowerCase();
 
         if ( searchValue === '') return [];
 
         for(let i=0; i<this.MOVIES.length; i++) {
-            let key = 'Title';
-            if(this.MOVIES[i][key].indexOf(searchValue) !=-1 ) {
-                movies.push(this.MOVIES[i]);
+            const key = 'Title';
+            const title = this.MOVIES[i][key].toLowerCase();
+            if(title.indexOf(searchValue) !=-1 ) {
+                const movie = this.MOVIES[i];
+                const _movie = {
+                    Poster: movie.Poster,
+                    Title: movie.Title,
+                    Type: movie.Type,
+                    Year: movie.Year,
+                    imdbID: movie.imdbID
+                }
+                movies.push(_movie);
             }
         }
-        return movies.slice( (page - 1)*10, page*10);
+        return movies.slice((page - 1) * this.SIZE, page * this.SIZE);
       }
     
 }

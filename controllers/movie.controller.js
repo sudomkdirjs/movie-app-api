@@ -18,7 +18,7 @@ const { movieDB } = require('../data');
 
     try {
         const response = await axios(
-            `${OMDB_API_URL}&type=movie&s=${searchValue}&page=${page}`
+            `${OMDB_API_URL}&type=movie&s=${searchValue.trim()}&page=${page}`
         );
 
         const localMovies = movieDB.searchMovies(searchValue, page);
